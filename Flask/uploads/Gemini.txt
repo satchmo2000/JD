@@ -1,0 +1,138 @@
+dependencies {
+    implementation 'com.google.api-client:google-api-client:1.33.2'
+    implementation 'com.google.oauth-client:google-oauth-client-jetty:1.33.2'
+    implementation 'com.google.api-client:google-api-client-gson:1.33.2'
+    implementation 'com.google.guava:guava:31.0.1-jre'
+}
+
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.http.HttpRequestInitializer;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.services.cloudnaturalanguage.v1.CloudNaturalLanguage;
+import com.google.api.services.cloudnaturalanguage.v1.model.AnalyzeContentRequest;
+import com.google.api.services.cloudnaturalanguage.v1.model.AnalyzeContentResponse;
+import com.google.api.services.cloudnaturalanguage.v1.model.Entity;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collections;
+
+public class GeminiChat {
+
+    public static void main(String[] args) throws IOException {
+        // 读取凭据文件
+        InputStream credentialsStream = GeminiChat.class.getResourceAsStream("/credentials.json");
+        GoogleCredential credentials = GoogleCredential.fromStream(credentialsStream);
+
+        // 创建 Cloud Natural Language API 客户端
+        CloudNaturalLanguage cloudNaturalLanguage = new CloudNaturalLanguage.Builder(
+            GoogleNetHttpTransport.newTrustedTransport(),
+            JacksonFactory.getDefaultInstance(),
+            new HttpRequestInitializer() {
+                @Override
+                public void initialize(com.google.api.client.http.HttpRequest request) throws IOException {
+                    credentials.initialize(request);
+                }
+            }
+        ).build();
+
+        // 创建聊天请求
+        AnalyzeContentRequest request = new AnalyzeContentRequest();
+        request.setDocument(new AnalyzeContentRequest.Document().setText("你好，Gemini！"));
+        request.setFeatures(Collections.singletonList("ENTITY_EXTRACTION"));
+
+        // 发送请求并获取响应
+        AnalyzeContentResponse response = cloudNaturalLanguage.projects().locations().analyzeContent(request).execute();
+
+        // 处理响应
+        for (Entity entity : response.getEntities()) {
+            System.out.println("实体类型：" + entity.getType());
+            System.out.println("实体名称：" + entity.getName());
+        }
+    }
+}
+
+String responseText = "";
+
+for (Entity entity : response.getEntities()) {
+    if (entity.getType().equals("PERSON")) {
+        responseText = "你好，" + entity.getName() + "！";
+    }
+}
+
+System.out.println(responseText);
+
+
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
+public class GeminiChat {
+
+    public static void main(String[] args) throws Exception {
+        // 创建 OkHttpClient 实例
+        OkHttpClient client = new OkHttpClient();
+
+        // 创建 RequestBody 实例
+        RequestBody requestBody = RequestBody.create(
+            MediaType.parse("application/json"),
+            new Gson().toJson(new JsonObject().addProperty("text", "你好，Gemini！"))
+        );
+
+        // 创建 Request 实例
+        Request request = new Request.Builder()
+            .url("https://api.gemini.ai/v1/chat")
+            .addHeader("Authorization", "Bearer YOUR_ACCESS_TOKEN")
+            .post(requestBody)
+            .build();
+
+        // 发送请求并获取响应
+        Response response = client.newCall(request).execute();
+
+        // 处理响应
+        if (response.isSuccessful()) {
+            System.out.println(response.body().string());
+        } else {
+            System.out.println("请求失败：" + response.code());
+        }
+    }
+}
+
+
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.http.HttpRequestInitializer;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.services.cloudnaturalanguage.v1.CloudNaturalLanguage;
+
+public class GetAccessToken {
+
+    public static void main(String[] args) throws Exception {
+        // 创建 Google Credential 实例
+        GoogleCredential credential = GoogleCredential.getApplicationDefault();
+
+        // 创建 Cloud Natural Language API 客户端
+        CloudNaturalLanguage cloudNaturalLanguage = new CloudNaturalLanguage.Builder(
+            GoogleNetHttpTransport.newTrustedTransport(),
+            JacksonFactory.getDefaultInstance(),
+            new HttpRequestInitializer() {
+                @Override
+                public void initialize(com.google.api.client.http.HttpRequest request) throws IOException {
+                    credential.initialize(request);
+                }
+            }
+        ).build();
+
+        // 获取 Access Token
+        String accessToken = credential.getAccessToken();
+
+        // 打印 Access Token
+        System.out.println(accessToken);
+    }
+}
+
